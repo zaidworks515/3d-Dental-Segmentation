@@ -908,7 +908,7 @@ def segment(obj_path, model_path, jaw):
         plotter.set_background('white')
 
         current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        glb_file = f'mesh_visualization_{current_datetime}.glb'
+        glb_file = f'segmentation results/public/models/plotting_{current_datetime}.glb'
 
         plotter.export_gltf(glb_file, save_normals=True)
 
