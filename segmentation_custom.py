@@ -921,7 +921,6 @@ def segment(obj_path, model_path, jaw):
         colors = cmap(np.linspace(0, 1, 27))
         colormap = mcolors.ListedColormap(colors)
 
-        plotter.add_mesh(mesh, scalars='Labels', show_scalar_bar=True, cmap=colormap, clim=[0, 27])
 
         plotter.add_mesh(mesh, scalars='Colors', rgb=True)
         plotter.set_background('white')
