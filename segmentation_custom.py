@@ -890,14 +890,12 @@ def segment(obj_path, model_path, jaw):
             labels_data = json.load(file)
 
         labels = labels_data['labels']
-
-        instances = labels['instances']
+        instances = labels_data['instances']
 
         selected_labels = {1, 2, 3, 9, 10, 11}  # Set of labels for red color
 
-        # Initialize vertex colors
-        vertex_colors = np.ones((len(mesh.vertices), 3))  # RGB colors, default black
-        vertex_colors[:, :] = [0.0, 0.0, 0.0]  # Set default color to black
+        vertex_colors = np.ones((len(mesh.points), 3))  # RGB colors, default white
+        vertex_colors[:, :] = [1.0, 1.0, 1.0]  # Set default color to white
 
         color_mapping = {
             label: [1.0, 0.0, 0.0]  # Red color for selected labels
@@ -908,6 +906,7 @@ def segment(obj_path, model_path, jaw):
             if instance_label in color_mapping:
                 vertex_colors[vertex_idx] = color_mapping[instance_label]
 
+        mesh.point_data['Colors'] = vertex_colors
 
         assert len(labels) == mesh.n_points or len(labels) == mesh.n_cells
 
@@ -916,23 +915,21 @@ def segment(obj_path, model_path, jaw):
         elif len(labels) == mesh.n_cells:
             mesh.cell_data['Labels'] = np.array(labels, dtype=int)
 
-        plotter = pv.Plotter(notebook=False)  
+        plotter = pv.Plotter(notebook=False)
 
         cmap = cm.get_cmap('jet', 27)
         colors = cmap(np.linspace(0, 1, 27))
         colormap = mcolors.ListedColormap(colors)
 
         plotter.add_mesh(mesh, scalars='Labels', show_scalar_bar=True, cmap=colormap, clim=[0, 27])
-        plotter.set_background('white')
 
-        glb_file = 'segmentation results/publicmodels/plotted_output.glb'
-        plotter.export_gltf(glb_file, save_normals=True)
-        # current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # glb_file = f'segmentation results/public/models/plotting_{current_datetime}.glb'
+        plotter.add_mesh(mesh, scalars='Colors', rgb=True)
+        plotter.set_background('white')
         
+        glb_file = f'segmentation results/public/models/plotted_output.glb'
+        plotter.export_gltf(glb_file, save_normals=True, inline_data=True)
 
         print(f"Saved 3D mesh visualization as {glb_file}")
-
         return f'The plotted GLB is saved as {glb_file}'
     
     
