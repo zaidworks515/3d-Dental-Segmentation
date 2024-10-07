@@ -883,7 +883,7 @@ def segment(obj_path, model_path, jaw):
     
     
     
-    def custom_plotting(obj_path):
+    def _custom_plotting(obj_path):
         mesh = pv.read(obj_path)
 
         with open('segmentation results/dental-labels.json', 'r') as file:
@@ -931,6 +931,59 @@ def segment(obj_path, model_path, jaw):
         print(f"Saved 3D mesh visualization as {glb_file}")
         return f'The plotted GLB is saved as {glb_file}'
     
+    def custom_plotting(obj_path):
+        mesh = pv.read(obj_path)
+
+        with open('segmentation results/dental-labels.json', 'r') as file:
+            labels_data = json.load(file)
+
+        labels = labels_data['labels']
+        instances = labels_data['instances']
+
+        front_selected_labels = {1, 2, 3, 9, 10, 11}  
+        right_selected_labels = {12, 13, 14, 15}      
+        left_selected_labels = {4, 5, 6, 7}           
+
+        def apply_labels(label_set, filename):
+            vertex_colors = np.ones((len(mesh.points), 3))  
+
+            color_mapping = {
+                label: [1.0, 0.0, 0.0]  # Red
+                for label in label_set
+            }
+
+            for vertex_idx, instance_label in enumerate(instances):
+                if instance_label in color_mapping:
+                    vertex_colors[vertex_idx] = color_mapping[instance_label]
+
+            mesh.point_data['Colors'] = vertex_colors
+
+            assert len(labels) == mesh.n_points or len(labels) == mesh.n_cells
+
+            if len(labels) == mesh.n_points:
+                mesh.point_data['Labels'] = np.array(labels, dtype=int)
+            elif len(labels) == mesh.n_cells:
+                mesh.cell_data['Labels'] = np.array(labels, dtype=int)
+
+            plotter = pv.Plotter(notebook=False)
+            cmap = cm.get_cmap('jet', 27)
+            colors = cmap(np.linspace(0, 1, 27))
+            colormap = mcolors.ListedColormap(colors)
+
+            plotter.add_mesh(mesh, scalars='Colors', rgb=True)
+            plotter.set_background('white')
+
+            glb_file = f'segmentation results/public/models/{filename}.glb'
+            plotter.export_gltf(glb_file, save_normals=True, inline_data=True)
+            return f'The plotted GLB is saved as {glb_file}'
+
+        front_file = apply_labels(front_selected_labels, 'plotted_front_view')
+        right_file = apply_labels(right_selected_labels, 'plotted_right_view')
+        left_file = apply_labels(left_selected_labels, 'plotted_left_view')
+
+        return front_file, right_file, left_file
+
+
     
     custom_plotting(obj_path)
         
@@ -945,3 +998,7 @@ obj_path = 'AI model + obj file/01533UH2_upper.obj'
 model_path = 'AI model + obj file/model.tar'
 
 segment(obj_path, model_path, jaw='upper') # by default it is upper, please take the input from user
+
+
+
+#zz
